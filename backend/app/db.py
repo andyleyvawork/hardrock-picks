@@ -1,6 +1,9 @@
 import os
+import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
+log = logging.getLogger("db")
 
 def _normalize_db_url(url: str) -> str:
     if url.startswith("postgres://"):
@@ -11,7 +14,15 @@ DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 
 engine = None
 SessionLocal = None
+DB_INIT_ERROR = None
 
 if DATABASE_URL:
-    engine = create_engine(_normalize_db_url(DATABASE_URL), pool_pre_ping=True)
-    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    try:
+        engine = create_engine(_normalize_db_url(DATABASE_URL), pool_pre_ping=True)
+        SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    except Exception as e:
+        # No tumbamos el servidor: solo guardamos el error para verlo en /db-check y en logs
+        DB_INIT_ERROR = f"{type(e).__name__}: {e}"
+        log.exception("DB engine init failed")
+        engine = None
+        SessionLocal = None
