@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from datetime import datetime, timezone
 from sqlalchemy import text
 
-from .db import engine
+from app.db import engine  # <- así, NO con "from .db ..."
 
 app = FastAPI(title="Hardrock Picks API")
 
