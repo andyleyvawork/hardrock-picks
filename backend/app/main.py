@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 from datetime import datetime, timezone
+from sqlalchemy import text
+
+from .db import engine
 
 app = FastAPI(title="Hardrock Picks API")
 
@@ -10,3 +13,12 @@ def root():
 @app.get("/health")
 def health():
     return {"ok": True}
+
+@app.get("/db-check")
+def db_check():
+    if engine is None:
+        return {"ok": False, "error": "DATABASE_URL not set"}
+
+    with engine.connect() as conn:
+        value = conn.execute(text("SELECT 1")).scalar()
+    return {"ok": True, "select_1": value}
